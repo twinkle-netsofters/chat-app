@@ -22,6 +22,6 @@ class UserModel {
       'email': this.email,
       'first_name': this.first_name,
       'profile_pic': this.profile_pic,
-    }
+    };
   }
 }
