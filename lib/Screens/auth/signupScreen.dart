@@ -55,7 +55,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         profile_pic: "",
       );
 
-      //  nowww first its creating a collection nemed "users" then its creates documetn and then converts data to the mapa and then in json then message retrive "user created"
+      // nowww first its creating a collection nemed "users" then its creates documetn and then converts data to the mapa and then in json then message retrive "user created"
       await FirebaseFirestore.instance
           .collection("users")
           .doc(uid)
