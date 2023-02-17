@@ -1,12 +1,22 @@
 import 'dart:io';
+import 'dart:math';
 
+import 'package:chat_app/Models/userModel.dart';
+import 'package:chat_app/Screens/homepage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 
 class CompleteProfile extends StatefulWidget {
-  const CompleteProfile({Key? key}) : super(key: key);
+  final UserModel? userModel;
+  final User firebaseUser;
+
+  const CompleteProfile(
+      {super.key, this.userModel, required this.firebaseUser});
 
   @override
   State<CompleteProfile> createState() => _CompleteProfileState();
@@ -16,6 +26,38 @@ class _CompleteProfileState extends State<CompleteProfile> {
   //use file of dart io
   File? imageFile;
   TextEditingController fullnameController = TextEditingController();
+
+  void checkValue() {
+    String fullname = fullnameController.text.trim();
+
+    if (fullname == "" || imageFile == null) {
+      print("Please fill all the fields");
+    } else {
+      uploadData();
+      print('data uploading');
+      Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage(userModel: widget.userModel,firebaseUser: widget.firebaseUser, )));
+    }
+  }
+
+  void uploadData() async {
+    // need user data to upload so we'll create final values
+    UploadTask uploadTask = FirebaseStorage.instance
+        .ref("profilepictures")
+        .child(widget.userModel!.uid.toString())
+        .putFile(imageFile!);
+    // run upload task we'll get snapshot
+    TaskSnapshot snapshot = await uploadTask;
+    // for save url
+    String imageUrl = await snapshot.ref.getDownloadURL();
+    String fullname = fullnameController.text.trim();
+
+    widget.userModel?.first_name = fullname;
+    widget.userModel?.profile_pic = imageUrl;
+
+    await FirebaseFirestore.instance.collection("users").doc(widget.userModel!.uid).set(widget.userModel!.toMap()).then((value){
+      print('Data Uploaded');
+    });
+  }
 
   void selectImage(ImageSource source) async {
     XFile? pickedFile = await ImagePicker().pickImage(source: source);
@@ -27,9 +69,9 @@ class _CompleteProfileState extends State<CompleteProfile> {
   void cropImage(XFile file) async {
     CroppedFile? croppedImage = await ImageCropper().cropImage(
         sourcePath: file.path,
-      aspectRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
-      compressQuality: 20
-    );//await ImageCropper().cropImage(sourcePath: file.path);
+        aspectRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
+        compressQuality:
+            20); //await ImageCropper().cropImage(sourcePath: file.path);
     if (croppedImage != null) {
       File convertedFile = File(croppedImage.path);
       setState(() {
@@ -91,11 +133,15 @@ class _CompleteProfileState extends State<CompleteProfile> {
                   showPhotoOption();
                 },
                 child: CircleAvatar(
-                  backgroundImage: FileImage(imageFile!),//CroppedFile(imageFile),
-                  child: Icon(
-                    Icons.person,
-                    size: 60,
-                  ),
+                  backgroundImage: imageFile != null
+                      ? FileImage(imageFile!)
+                      : null, //CroppedFile(imageFile),
+                  child: imageFile == null
+                      ? Icon(
+                          Icons.person,
+                          size: 60,
+                        )
+                      : null,
                   radius: 60,
                 ),
               ),
@@ -116,6 +162,7 @@ class _CompleteProfileState extends State<CompleteProfile> {
                   height: 50,
                   child: ElevatedButton(
                       onPressed: () {
+                        checkValue();
                         //Navigator.push(context, MaterialPageRoute(builder: (context) => SignUpScreen()));
                       },
                       child: Text('Sign Up')))

@@ -1,4 +1,5 @@
 import 'package:chat_app/Models/userModel.dart';
+import 'package:chat_app/Screens/homepage.dart';
 import 'package:chat_app/Screens/auth/signupScreen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -46,9 +47,11 @@ class _LoginScreenState extends State<LoginScreen> {
       // here data is not in map format for now so we have to convert that to map using .data() as MAp<>
       UserModel? userModel =
           UserModel.fromJson(userData.data() as Map<String, dynamic>);
+      print('login successfullll');
+      Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage(userModel: userModel,firebaseUser: credential!.user!,)));
     }
 
-    print('login successfullll');
+
   }
 
   @override

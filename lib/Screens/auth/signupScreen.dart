@@ -62,6 +62,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           .set(newUser.toMap())
           .then((value) {
         print('New User Created');
+        Navigator.push(context, MaterialPageRoute(builder: (context) => CompleteProfile(firebaseUser: credential!.user!, userModel: newUser)));
       });
     }
   }
